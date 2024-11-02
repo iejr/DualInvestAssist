@@ -12,14 +12,6 @@
 (function() {
     'use strict';
 
-    // Sample two-dimensional data
-    const sampleTableData = [
-        ['Header 1', 'Header 2', 'Header 3'],
-        ['Row 1, Col 1', 'Row 1, Col 2', 'Row 1, Col 3'],
-        ['Row 2, Col 1', 'Row 2, Col 2', 'Row 2, Col 3'],
-        ['Row 3, Col 1', 'Row 3, Col 2', 'Row 3, Col 3']
-    ];
-
     // Inject CSS for the modal and table
     const style = document.createElement('style');
     style.innerHTML = `
@@ -38,7 +30,7 @@
             padding:20px;
             margin:50px auto;
             width:80%;
-            max-width:600px;
+            max-width:1600px;
         }
         table {
             width: 100%;
@@ -117,27 +109,70 @@
     // Add event listener for the close button
     document.getElementById('closeModal').addEventListener('click', closeModal);
 
+    function stringToHex(str) {
+        let hexString = '';
+        for (let i = 0; i < str.length; i++) {
+            // Get the Unicode code of the character, then convert it to a hex string
+            const hex = str.charCodeAt(i).toString(16);
+            hexString += hex.padStart(2, '0'); // Ensure each hex code is 2 digits
+        }
+        return hexString;
+    }
+
+    // Function to insert <x, y> into table at column j
+    function insertPair(table, x, y, j) {
+        let found = false;
+
+        // Check each row to see if the first element matches x
+        for (let i = 0; i < table.length; i++) {
+            if (table[i][0] === x) {
+                // Ensure the row has enough columns to insert at position j
+                while (table[i].length <= j) {
+                    table[i].push(null);
+                }
+                table[i][j] = y;
+                found = true;
+                break;
+            }
+        }
+
+        // If x was not found, create a new row
+        if (!found) {
+            const newRow = Array(j + 1).fill(null);
+            newRow[0] = x;
+            newRow[j] = y;
+            table.push(newRow);
+        }
+    }
+
     // Define the function to capture elements and log the length
     function captureElements() {
+        // Initialize planTable as an array of rows (1x1 initially)
+        let planTable = [['initial']];
+
         const elements = document.querySelectorAll('.dual-product-table-content .dual-product-table-content-list .content-list-item'); // Replace with your actual selector
         console.log("Number of elements:", elements.length);
 
         // Optional: Loop through and log each element if needed
-        elements.forEach((pkg, index) => {
-            console.log(`Element ${index + 1} =>`);
+        elements.forEach((pkg, j) => {
+            console.log(`Element ${j + 1} =>`);
 
             const term = pkg.querySelector('p');
             if (term) {
+                planTable[0].push(term.innerText);
                 console.log("term spec: ", term.innerText);
+            } else {
+                planTable[0].push('undefined');
             }
 
             const plans = pkg.querySelectorAll('.content-list-line');
 
-            plans.forEach((line, index) => {
-                console.log(`Line ${index + 1} =>`);
+            plans.forEach((line, i) => {
+                console.log(`Line ${i + 1} =>`);
 
                 const price = line.querySelectorAll('.content-table-price-width')[0];
                 if (price) {
+                    const price_val = stringToHex(price.innerText);
                     console.log("\tprice => ", price.innerText);
                 } else {
                     console.log("\tNo <div price> element found");
@@ -156,10 +191,12 @@
                 } else {
                     console.log("\tNo <div apy> element found");
                 }
+
+                insertPair(planTable, price.innerText, apy.innerText, j + 1);
             })
         });
 
-        renderTable(sampleTableData);
+        renderTable(planTable);
     }
 
     // Create a button to trigger the function manually
