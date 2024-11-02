@@ -114,14 +114,8 @@
     // Add event listener for the close button
     document.getElementById('closeModal').addEventListener('click', closeModal);
 
-    function stringToHex(str) {
-        let hexString = '';
-        for (let i = 0; i < str.length; i++) {
-            // Get the Unicode code of the character, then convert it to a hex string
-            const hex = str.charCodeAt(i).toString(16);
-            hexString += hex.padStart(2, '0'); // Ensure each hex code is 2 digits
-        }
-        return hexString;
+    function parseCurrency(str) {
+        return parseFloat(str.replace(/[^\d.-]/g, ""));
     }
 
     function processPriceField(raw, maxSize) {
@@ -234,7 +228,17 @@
             }
         }
 
+        sortTable(outputTable, 0);
         return outputTable;
+    }
+
+    function sortTable(table, j) {
+      table.sort((a, b) => {
+          // Handle cases where the value in column j might be null or undefined
+          const valA = parseCurrency(a[j]) ?? Infinity; // Use Infinity so null/undefined values go to the end
+          const valB = parseCurrency(b[j]) ?? Infinity;
+          return valB - valA; // Sort in descending order
+      });
     }
 
     function getOptimal(table) {
