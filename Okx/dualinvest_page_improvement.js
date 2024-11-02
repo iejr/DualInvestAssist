@@ -67,7 +67,7 @@
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
     // Function to render the table in the modal
-    function renderTable(data) {
+    function renderTable(data, highlightIdx) {
         const tableHead = document.querySelector('#dataTable thead tr');
         const tableBody = document.querySelector('#dataTable tbody');
 
@@ -88,9 +88,15 @@
             const row = data[i];
             const tr = document.createElement('tr');
 
-            row.forEach(cell => {
+            row.forEach((cell, j) => {
                 const td = document.createElement('td');
                 td.innerText = cell;
+                if (highlightIdx[i] && highlightIdx[i] == j) {
+                // if (i == j) {
+                    td.style.backgroundColor = 'yellow';
+                    td.style.fontWeight = 'bold'; // Make the font bold
+                }
+
                 tr.appendChild(td);
             });
 
@@ -170,7 +176,7 @@
         // Initialize planTable as an array of rows (1x1 initially)
         let planTable = [['dummy']];
 
-        const elements = document.querySelectorAll('.dual-product-table-content .dual-product-table-content-list .content-list-item'); // Replace with your actual selector
+        const elements = document.querySelectorAll('.dual-product-table-content .dual-product-table-content-list .content-list-item');
         console.log("Number of elements:", elements.length);
 
         // Optional: Loop through and log each element if needed
@@ -210,7 +216,9 @@
             })
         });
 
-        renderTable(genRenderTable(planTable));
+        const resultTable = genRenderTable(planTable);
+        const highlightIdx = getOptimal(resultTable);
+        renderTable(resultTable, highlightIdx);
     }
 
     function genRenderTable(table) {
@@ -242,6 +250,27 @@
         }
 
         return outputTable;
+    }
+
+    function getOptimal(table) {
+        let optChoice = [null];
+        for (let i = 1; i < table.length; i++) {
+            let optVal = null;
+            let optIdx = -1;
+            for (let j = 2; j < table[i].length; j++) {
+                if (!table[i][j]) {
+                    continue;
+                }
+                const pureVal = parseFloat(table[i][j]);
+                if (optIdx < 0 || pureVal > optVal) {
+                    optIdx = j;
+                    optVal = pureVal;
+                }
+            }
+            optChoice.push(optIdx);
+        }
+        console.log("\t opt idx => ", optChoice);
+        return optChoice;
     }
 
     // Create a button to trigger the function manually
