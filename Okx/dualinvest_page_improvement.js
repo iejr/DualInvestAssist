@@ -67,7 +67,7 @@
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
     // Function to render the table in the modal
-    function renderTable(data) {
+    function renderTable(data, highlightIdx) {
         const tableHead = document.querySelector('#dataTable thead tr');
         const tableBody = document.querySelector('#dataTable tbody');
 
@@ -88,9 +88,14 @@
             const row = data[i];
             const tr = document.createElement('tr');
 
-            row.forEach(cell => {
+            row.forEach((cell, j) => {
                 const td = document.createElement('td');
                 td.innerText = cell;
+                if (highlightIdx[i] && highlightIdx[i] == j) {
+                    td.style.backgroundColor = 'yellow';
+                    td.style.fontWeight = 'bold'; // Make the font bold
+                }
+
                 tr.appendChild(td);
             });
 
@@ -170,17 +175,14 @@
         // Initialize planTable as an array of rows (1x1 initially)
         let planTable = [['dummy']];
 
-        const elements = document.querySelectorAll('.dual-product-table-content .dual-product-table-content-list .content-list-item'); // Replace with your actual selector
-        console.log("Number of elements:", elements.length);
+        const elements = document.querySelectorAll('.dual-product-table-content .dual-product-table-content-list .content-list-item');
 
         // Optional: Loop through and log each element if needed
         elements.forEach((pkg, j) => {
-            console.log(`Element ${j + 1} =>`);
 
             const term = pkg.querySelector('p');
             if (term) {
                 planTable[0].push(term.innerText);
-                console.log("term spec: ", term.innerText);
             } else {
                 planTable[0].push('undefined');
             }
@@ -188,29 +190,21 @@
             const plans = pkg.querySelectorAll('.content-list-line');
 
             plans.forEach((line, i) => {
-                console.log(`Line ${i + 1} =>`);
 
                 const price = line.querySelectorAll('.content-table-price-width')[0];
                 const apy = line.querySelectorAll('.content-table-apy-width')[0];
                 if (price && apy) {
-                    console.log("\tprice => ", price.innerText);
-                    // console.log("\tAPY => ", apy.innerText);
                     insertPair(planTable, price.innerText, parseApyField(apy.innerText), j + 1);
                 } else {
-                    console.log("\tNo <div price> element found");
+                    console.log("\tNo <div price> or <div apy> element found");
                 }
-
-                // const expire = line.querySelectorAll('.content-table-expire-width')[0];
-                // if (expire) {
-                //     console.log("\texpire => ", expire.innerText);
-                // } else {
-                //     console.log("\tNo <div expire> element found");
-                // }
 
             })
         });
 
-        renderTable(genRenderTable(planTable));
+        const resultTable = genRenderTable(planTable);
+        const highlightIdx = getOptimal(resultTable);
+        renderTable(resultTable, highlightIdx);
     }
 
     function genRenderTable(table) {
@@ -219,7 +213,6 @@
         const height = table.length;
         const width = table[0].length + 1;
 
-        // console.log("\theight = %d, width = %d", height, width);
 
         let outputTable = [metadataHeader];
 
@@ -242,6 +235,26 @@
         }
 
         return outputTable;
+    }
+
+    function getOptimal(table) {
+        let optChoice = [null];
+        for (let i = 1; i < table.length; i++) {
+            let optVal = null;
+            let optIdx = -1;
+            for (let j = 2; j < table[i].length; j++) {
+                if (!table[i][j]) {
+                    continue;
+                }
+                const pureVal = parseFloat(table[i][j]);
+                if (optIdx < 0 || pureVal > optVal) {
+                    optIdx = j;
+                    optVal = pureVal;
+                }
+            }
+            optChoice.push(optIdx);
+        }
+        return optChoice;
     }
 
     // Create a button to trigger the function manually
