@@ -119,6 +119,26 @@
         return hexString;
     }
 
+    function processPriceField(raw, maxSize) {
+        const segments = raw.split('\n');
+
+        let result = Array(maxSize).fill(null);
+        for (let i = 0; i < segments.length && i < result.length; i++) {
+            result[i] = segments[i];
+        }
+
+        return result;
+    }
+
+    function parseApyField(raw) {
+        const segments = raw.split('\n');
+
+        if (segments.length > 0) {
+            return segments[0];
+        }
+        return raw;
+    }
+
     // Function to insert <x, y> into table at column j
     function insertPair(table, x, y, j) {
         let found = false;
@@ -148,7 +168,7 @@
     // Define the function to capture elements and log the length
     function captureElements() {
         // Initialize planTable as an array of rows (1x1 initially)
-        let planTable = [['initial']];
+        let planTable = [['dummy']];
 
         const elements = document.querySelectorAll('.dual-product-table-content .dual-product-table-content-list .content-list-item'); // Replace with your actual selector
         console.log("Number of elements:", elements.length);
@@ -171,32 +191,57 @@
                 console.log(`Line ${i + 1} =>`);
 
                 const price = line.querySelectorAll('.content-table-price-width')[0];
-                if (price) {
-                    const price_val = stringToHex(price.innerText);
+                const apy = line.querySelectorAll('.content-table-apy-width')[0];
+                if (price && apy) {
                     console.log("\tprice => ", price.innerText);
+                    // console.log("\tAPY => ", apy.innerText);
+                    insertPair(planTable, price.innerText, parseApyField(apy.innerText), j + 1);
                 } else {
                     console.log("\tNo <div price> element found");
                 }
 
-                const expire = line.querySelectorAll('.content-table-expire-width')[0];
-                if (expire) {
-                    console.log("\texpire => ", expire.innerText);
-                } else {
-                    console.log("\tNo <div expire> element found");
-                }
+                // const expire = line.querySelectorAll('.content-table-expire-width')[0];
+                // if (expire) {
+                //     console.log("\texpire => ", expire.innerText);
+                // } else {
+                //     console.log("\tNo <div expire> element found");
+                // }
 
-                const apy = line.querySelectorAll('.content-table-apy-width')[0];
-                if (apy) {
-                    console.log("\tAPY => ", apy.innerText);
-                } else {
-                    console.log("\tNo <div apy> element found");
-                }
-
-                insertPair(planTable, price.innerText, apy.innerText, j + 1);
             })
         });
 
-        renderTable(planTable);
+        renderTable(genRenderTable(planTable));
+    }
+
+    function genRenderTable(table) {
+        const metadataHeader = ["Price", "%"];
+        const metadataHeaderLen = metadataHeader.length;
+        const height = table.length;
+        const width = table[0].length + 1;
+
+        // console.log("\theight = %d, width = %d", height, width);
+
+        let outputTable = [metadataHeader];
+
+        // process header
+        for (let j = 1; j < table[0].length; j++) {
+            outputTable[0].push(table[0][j]);
+        }
+
+        for (let i = 1; i < height; i++) {
+            // process rate
+            const metadata = processPriceField(table[i][0], metadataHeaderLen);
+            outputTable.push(metadata);
+
+            for (let j = 1; j < table[i].length; j++) {
+                outputTable[i].push(table[i][j]);
+            }
+            while (outputTable[i].length < width) {
+                outputTable[i].push(null);
+            }
+        }
+
+        return outputTable;
     }
 
     // Create a button to trigger the function manually
