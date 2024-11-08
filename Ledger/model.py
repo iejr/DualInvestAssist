@@ -20,9 +20,9 @@ class SellManager:
         self.detail = []
 
     def _buildByObj(self, raw_dict):
-        self.total = raw_dict.get('total', 0)
-        self.taken = raw_dict.get('taken', 0)
-        self.detail = [(k, v) for k, v in raw_dict.get('detail', {}).items()]
+        self.total = raw_dict.get("total", 0)
+        self.taken = raw_dict.get("taken", 0)
+        self.detail = [(k, v) for k, v in raw_dict.get("detail", {}).items()]
 
     def getAvailableAmount(self) -> int:
         return self.total - self.taken
@@ -35,13 +35,9 @@ class SellManager:
 
     def toDict(self) -> dict:
         temp = {}
-        for (k, v) in self.detail:
+        for k, v in self.detail:
             temp[k] = v
-        return {
-                'total': self.total,
-                'taken': self.taken,
-                'detail': temp
-                }
+        return {"total": self.total, "taken": self.taken, "detail": temp}
 
     @classmethod
     def fromDict(cls, raw_dict):
@@ -96,10 +92,13 @@ class Ledger:
         self.data = []
 
     def _buildByObj(self, raw_dict):
-        self.symbol = raw_dict.get('symbol', "")
-        self.total_amount = raw_dict.get('total_amount', 0)
-        self.total_taken = raw_dict.get('total_taken', 0)
-        self.data = [[price, SellManager.fromDict(manager)] for price, manager in raw_dict.get('data', {}).items()]
+        self.symbol = raw_dict.get("symbol", "")
+        self.total_amount = raw_dict.get("total_amount", 0)
+        self.total_taken = raw_dict.get("total_taken", 0)
+        self.data = [
+            [price, SellManager.fromDict(manager)]
+            for price, manager in raw_dict.get("data", {}).items()
+        ]
 
     def getTotalAmount(self) -> int:
         return self.total_amount
@@ -128,11 +127,11 @@ class Ledger:
             temp[k] = v.toDict()
 
         return {
-                'symbol': self.symbol,
-                'total_amount': self.total_amount,
-                'total_taken': self.total_taken,
-                'data': temp
-                }
+            "symbol": self.symbol,
+            "total_amount": self.total_amount,
+            "total_taken": self.total_taken,
+            "data": temp,
+        }
 
     @classmethod
     def fromDict(self, raw_dict):
@@ -203,7 +202,7 @@ class Ledger:
             total_change += v.removeTaken(name, sold)
             if v.total == 0:
                 del self.data[i]
-        
+
         if sold:
             self.total_amount -= total_change
         self.total_taken -= total_change
@@ -216,29 +215,29 @@ if __name__ == "__main__":
     ledger.addNewPurchase(100, 20)
     print(ledger)
 
-    ledger.addNewSellPlan('plan 1', 101, 20)
+    ledger.addNewSellPlan("plan 1", 101, 20)
     print(ledger)
 
     ledger.addNewPurchase(50, 20)
     print(ledger)
-    ledger.addNewSellPlan('plan 2', 50, 10)
+    ledger.addNewSellPlan("plan 2", 50, 10)
     print(ledger)
 
     ledger.addNewPurchase(150, 20)
-    ledger.addNewSellPlan('plan 3', 200, 10)
-    ledger.addNewSellPlan('plan 4', 75, 10)
+    ledger.addNewSellPlan("plan 3", 200, 10)
+    ledger.addNewSellPlan("plan 4", 75, 10)
     print(ledger)
 
     ledger.addNewPurchase(150, 20)
-    ledger.addNewSellPlan('plan 5', 150, 20)
+    ledger.addNewSellPlan("plan 5", 150, 20)
     print(ledger)
 
-    ledger.finishPlan('plan 1', True)
+    ledger.finishPlan("plan 1", True)
     print(ledger)
 
-    ledger.finishPlan('plan 3', False)
+    ledger.finishPlan("plan 3", False)
     print(ledger)
 
-    ledger.finishPlan('plan 2', True)
-    ledger.finishPlan('plan 4', True)
+    ledger.finishPlan("plan 2", True)
+    ledger.finishPlan("plan 4", True)
     print(ledger)
