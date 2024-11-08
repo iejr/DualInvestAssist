@@ -24,6 +24,9 @@ class SellManager:
         self.taken = raw_dict.get("taken", 0)
         self.detail = [(k, v) for k, v in raw_dict.get("detail", {}).items()]
 
+    def getTotalAmount(self) -> int:
+        return self.total
+
     def getAvailableAmount(self) -> int:
         return self.total - self.taken
 
@@ -99,6 +102,9 @@ class Ledger:
             [price, SellManager.fromDict(manager)]
             for price, manager in raw_dict.get("data", {}).items()
         ]
+
+    def getSymbol(self) -> str:
+        return self.symbol
 
     def getTotalAmount(self) -> int:
         return self.total_amount
@@ -200,7 +206,7 @@ class Ledger:
         for i in range(len(self.data) - 1, -1, -1):
             k, v = self.data[i]
             total_change += v.removeTaken(name, sold)
-            if v.total == 0:
+            if v.getTotalAmount() == 0:
                 del self.data[i]
 
         if sold:
