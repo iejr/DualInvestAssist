@@ -40,7 +40,11 @@ class InvestManager:
         if not symbol in self.ledgers.keys():
             raise KeyError(f"Symbol {symbol} not found in all ledgers")
 
-        return self.ledgers[symbol].getAvailableAmountLessOrEqualThan(price)
+        amount_list = self.ledgers[symbol].getAvailableAmountLessOrEqualThan(price)
+        total_amount = 0
+        for x in amount_list:
+            total_amount += x[1] 
+        return total_amount, amount_list
 
     def addNewLedger(self, symbol):
         if symbol in self.ledgers.keys():
@@ -94,9 +98,9 @@ def main(args):
             )
             return
         symbol = args[1]
-        price = args[2]
-        amount = manager.getTotalAvailableAmount(symbol, price)
-        print(f"There are {amount} shares of {symbol} was bought under or equal to {price}")
+        price = int(args[2])
+        amount, amount_list = manager.getTotalAvailableAmount(symbol, price)
+        print(f"There are {amount} shares of {symbol} bought under or equal to {price}: {amount_list}")
     elif action == "add-ledger":
         if len(args) < 2:
             print(
@@ -113,7 +117,7 @@ def main(args):
             )
             return
         symbol = args[1]
-        price = args[2]
+        price = int(args[2])
         amount = int(args[3])
         manager.addNewPurchase(symbol, price, amount)
         print("Successfully add purchase record to the ledger")
@@ -125,7 +129,7 @@ def main(args):
             return
         symbol = args[1]
         plan_name = args[2]
-        price = args[3]
+        price = int(args[3])
         amount = int(args[4])
         if manager.addNewSellPlan(symbol, plan_name, price, amount):
             print("Successfully add the new sell high plan to the ledger")

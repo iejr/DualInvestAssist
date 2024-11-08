@@ -159,12 +159,11 @@ class Ledger:
         for i in range(0, boundary + 1):
             if i >= len(self.data):
                 break
-            detail.append(
-                [
-                    self._getPriceFromData(self.data[i]),
-                    self._getSellManagerFromData(self.data[i]).getAvailableAmount(),
-                ]
-            )
+            price = self._getPriceFromData(self.data[i])
+            amount = self._getSellManagerFromData(self.data[i]).getAvailableAmount()
+            if price > target_price or amount == 0:
+                continue;
+            detail.append([price, amount])
 
         return detail
 
