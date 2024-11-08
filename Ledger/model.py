@@ -198,8 +198,11 @@ class Ledger:
 
     def finishPlan(self, name, sold):
         total_change = 0
-        for k, v in self.data:
+        for i in range(len(self.data) - 1, -1, -1):
+            k, v = self.data[i]
             total_change += v.removeTaken(name, sold)
+            if v.total == 0:
+                del self.data[i]
         
         if sold:
             self.total_amount -= total_change
