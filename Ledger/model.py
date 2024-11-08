@@ -6,10 +6,23 @@ class SellManager:
     taken: int
     detail: list
 
-    def __init__(self, amount=0):
+    def __init__(self, raw=0):
+        if isinstance(raw, int):
+            self._buildByArgs(raw)
+        elif isinstance(raw, dict):
+            self._buildByObj(raw)
+        else:
+            raise TypeError(f"Unsupported argument type {type(raw)}")
+
+    def _buildByArgs(self, amount):
         self.total = amount
         self.taken = 0
         self.detail = []
+
+    def _buildByObj(self, raw_dict):
+        self.total = raw_dict.get('total', 0)
+        self.taken = raw_dict.get('taken', 0)
+        self.detail = [(k, v) for k, v in raw_dict.get('detail', {}).items()]
 
     def getAvailableAmount(self) -> int:
         return self.total - self.taken
@@ -19,6 +32,20 @@ class SellManager:
 
     def __repr__(self) -> str:
         return f"[total: {self.total} | taken: {self.taken} | detail: {self.detail}]"
+
+    def toDict(self) -> dict:
+        temp = {}
+        for (k, v) in self.detail:
+            temp[k] = v
+        return {
+                'total': self.total,
+                'taken': self.taken,
+                'detail': temp
+                }
+
+    @classmethod
+    def fromDict(cls, raw_dict):
+        return cls(raw_dict)
 
     def checkAvailableAmount(self, new_amount) -> bool:
         return self.getAvailableAmount() >= new_amount
@@ -54,11 +81,25 @@ class Ledger:
     total_taken: int
     data: list[int, SellManager]
 
-    def __init__(self, symbol):
+    def __init__(self, raw):
+        if isinstance(raw, str):
+            self._buildByArgs(raw)
+        elif isinstance(raw, dict):
+            self._buildByObj(raw)
+        else:
+            raise TypeError(f"Unsupported argument type: {type(raw)}")
+
+    def _buildByArgs(self, symbol):
         self.symbol = symbol
         self.total_amount = 0
         self.total_taken = 0
         self.data = []
+
+    def _buildByObj(self, raw_dict):
+        self.symbol = raw_dict.get('symbol', "")
+        self.total_amount = raw_dict.get('total_amount', 0)
+        self.total_taken = raw_dict.get('total_taken', 0)
+        self.data = [[price, SellManager.fromDict(manager)] for price, manager in raw_dict.get('data', {}).items()]
 
     def getTotalAmount(self) -> int:
         return self.total_amount
@@ -80,6 +121,22 @@ class Ledger:
         for k, v in self.data:
             show += f"\t{k} => " + str(v) + "\n"
         return show
+
+    def toDict(self) -> dict:
+        temp = {}
+        for k, v in self.data:
+            temp[k] = v.toDict()
+
+        return {
+                'symbol': self.symbol,
+                'total_amount': self.total_amount,
+                'total_taken': self.total_taken,
+                'data': temp
+                }
+
+    @classmethod
+    def fromDict(self, raw_dict):
+        return Ledger(raw_dict)
 
     def getGreatestPricePosLessThan(self, target_price) -> int:
         # Extract keys for binary search
